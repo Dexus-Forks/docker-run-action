@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
-env | grep -v '^#' | xargs > docker-run-action.env
+echo "" >docker-run-action.env
+for env_var in $(env | cut -f1 -d"="); do
+  eval var=\$$env_var
+  if [[ -z $var ]] || [[ "$env_var" == "PATH" ]] || [[ "$env_var" == "DOCKER_VERSION" ]] ||
+    [[ "$env_var" == "_" ]] || [[ "$env_var" == "SHLVL" ]] || [[ "$env_var" == "PWD" ]]; then
+    continue
+  fi
+  echo "${env_var}=${var@Q}" >>docker-run-action.env
+done
 
 if [ ! -z $INPUT_USERNAME ];
 then echo $INPUT_PASSWORD | docker login $INPUT_REGISTRY -u $INPUT_USERNAME --password-stdin
